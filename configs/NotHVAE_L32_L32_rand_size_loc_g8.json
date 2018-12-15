@@ -1,30 +1,31 @@
 {
-    "name": "sz32_rand_size_loc_fill_L8",
+    "name": "NotHVAE_L32_L32_rand_size_loc_g8",
     "n_gpu": 1,
     
     "arch": {
-        "type": "VAE_SMALL",
+        "type": "NotHVAE",
         "args": {
-                 "latent_size" : 8,
-                 "img_size": 32,
-                 "in_channels": 1
+                 "img_size": 256,
+                  "in_channels": 1,
+                  "l2_latent_size": 32, 
+                  "l1_latent_size": 32, 
+                  "l2_stride": 32
         }
     },
     "data_loader": {
-        "type": "make_gen_single_shape",
+        "type": "make_gen_grid",
         "args":{
-            "files_dict_loc": "/media/rene/data/hvae/shapes/sz32_rand_size_loc_fill/files_dict.pkl",
-            "batch_size": 256,
-            "num_workers": 4, 
-            "img_size": 32
+            "files_dict_loc": "/media/rene/data/hvae/shapes/sz32_rand_size_loc_g8/files_dict.pkl",
+            "batch_size": 128,
+            "num_workers": 4,
+            "img_size": 256
         }  
     },
     "optimizer": {
         "type": "Adam",
         "args":{
             "lr": 0.001,
-            "weight_decay": 0,
-            "amsgrad": true
+            "weight_decay": 5e-4
         }
     },
 
@@ -40,19 +41,19 @@
     "lr_scheduler": {
         "type": "StepLR",
         "args": {
-            "step_size": 15,
+            "step_size": 100,
             "gamma": 0.2
         }
     },
     "trainer": {
-        "epochs": 50,
+        "epochs": 500,
         "save_dir": "/media/rene/data/hvae/shapes_output",
         "save_period": 1,
         "verbosity": 1,
         "give_model_label": false,
         
         "monitor": "min val_loss",
-        "early_stop": 15,
+        "early_stop": 200,
         
         "tensorboardX": true,
         "log_dir": "/media/rene/data/hvae/shapes_output"

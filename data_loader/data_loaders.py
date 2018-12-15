@@ -10,6 +10,7 @@ from PIL import Image
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
+from utils.norms import shape_norm, shape_grid_norm
 
 class FilesDFImageDataset(Dataset):
     def __init__(self, files_df, base_path=None, transforms=None,
@@ -53,9 +54,10 @@ class FilesDFImageDataset(Dataset):
                 print('loc', loc)
         if self.transforms is not None:
             img = self.transforms(img)
-            
-        label = self.files[self.label_colname].iloc[index]
-
+        if self.label_colname:
+            label = self.files[self.label_colname].iloc[index]
+        else:
+            label = 0
         # return the right stuff:
         if self.return_loc:
             return img, label, loc
@@ -74,9 +76,9 @@ def make_generators_MNIST(files_dict_loc, batch_size, num_workers, img_size=32,
     
     data_transforms = {
         'train': transforms.Compose([
-            transforms.Resize(img_size),
-            transforms.ToTensor(),
-            transforms.Normalize((0.1307,), (0.3081,))
+                                    transforms.Resize(img_size),
+                                    transforms.ToTensor(),
+                                    transforms.Normalize((0.1307,), (0.3081,))
         ])
         }
 
@@ -104,7 +106,7 @@ def make_gen_single_shape(files_dict_loc, batch_size, num_workers, img_size=32,
         'train': transforms.Compose([
             transforms.Resize(img_size),
             transforms.ToTensor(),
-            transforms.Normalize((0.10,), (0.24,))
+            transforms.Normalize(*shape_norm)
         ])
         }
 
@@ -123,6 +125,32 @@ def make_gen_single_shape(files_dict_loc, batch_size, num_workers, img_size=32,
     return dataloaders
 
 
+def make_gen_grid(files_dict_loc, batch_size, num_workers, img_size=32, 
+                  path_colname='path', return_loc=False):
+    with open(files_dict_loc, 'rb') as f:
+        files_dict = pickle.load(f)
+    
+    data_transforms = {
+        'train': transforms.Compose([
+            transforms.Resize(img_size),
+            transforms.ToTensor(),
+            transforms.Normalize(*shape_grid_norm)
+        ])
+        }
+
+    data_transforms['val'] = data_transforms['train']
+
+    datasets = {}
+    dataloaders = {}
+
+    datasets = {x: FilesDFImageDataset(files_dict[x], base_path=None, transforms=data_transforms[x], 
+                                       path_colname=path_colname, label_colname=None, select_label=None, return_loc=return_loc, bw=True)
+                                        for x in list(data_transforms.keys())}
+
+    dataloaders = {x: torch.utils.data.DataLoader(datasets[x], batch_size=batch_size, 
+                                                    shuffle=True, num_workers=num_workers)
+                                                    for x in list(data_transforms.keys())}
+    return dataloaders
 # def make_generators_DF_art(files_dict, base_path=None, batch_size=50, IM_SIZE=64, select_label=None, return_loc=False, 
 #                              path_colname='path', label_colname='label', num_workers=4):
 #     """

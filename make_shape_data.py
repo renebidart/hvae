@@ -8,8 +8,8 @@ from PIL import Image, ImageDraw
 
 parser = argparse.ArgumentParser(description='Training')
 parser.add_argument('--PATH', type=str)
-parser.add_argument('--train_imgs', type=int, default=10000)
-parser.add_argument('--val_imgs', type=int, default=2000)
+parser.add_argument('--train_imgs', type=int, default=60000)
+parser.add_argument('--val_imgs', type=int, default=10000)
 parser.add_argument('--im_size', type=int, default=32)
 parser.add_argument('--rand_size', dest='rand_size', action='store_true')
 parser.add_argument('--rand_loc', dest='rand_loc', action='store_true')
@@ -28,8 +28,8 @@ def make_shape(im_size, shape_type, rand_size, rand_loc, rand_fill, rand_outline
         2: rectangle (h=2*w)
         3: ellipse (h=2*w)
         4: right traingle (h = w)
-    rand_fill: Random Uniform (1, 255)
-    rand_outline: Random Uniform (1, 255)
+    rand_fill: Random Uniform (1, 128)
+    rand_outline: Random Uniform (1, 128)
     rand_size: Random shape size between 25% and 75% of the image
     rand_loc: Random Uniform over domain, excepting the edges
     grid_width: Generate a grid of shapes rather than a single one
@@ -37,11 +37,11 @@ def make_shape(im_size, shape_type, rand_size, rand_loc, rand_fill, rand_outline
     kwargs = {}
     
     if rand_fill:
-        kwargs['fill'] = randint(1, 255)
+        kwargs['fill'] = randint(1, 128)
     else: 
-        kwargs['fill'] = 128
+        kwargs['fill'] = 1
     if rand_outline:
-        kwargs['outline'] = randint(1, 255)
+        kwargs['outline'] = randint(1, 128)
     else: 
         kwargs['outline'] = kwargs['fill']
         
@@ -59,7 +59,7 @@ def make_shape(im_size, shape_type, rand_size, rand_loc, rand_fill, rand_outline
         top_l = (int((im_size-width)/2), int((im_size-height)/2))
         bottom_r = (top_l[0] + width, top_l[1] + height)
         
-    im = Image.fromarray(np.uint8(np.zeros((im_size,im_size))))
+    im = Image.fromarray(np.uint8(np.full((im_size,im_size), 255)))
     draw = ImageDraw.Draw(im)
 
     if shape_type in [0, 2]:
@@ -80,7 +80,7 @@ def make_shape(im_size, shape_type, rand_size, rand_loc, rand_fill, rand_outline
 
 def make_shape_grid(im_size, rand_size, rand_loc, rand_fill, rand_outline, grid_width):
     """Generate a grid of random shapes"""
-    im = np.zeros((grid_width*im_size, grid_width*im_size))
+    im = np.full((grid_width*im_size, grid_width*im_size), 255)
     for i in range(grid_width*grid_width):
         shape_type = randint(0, 4)
         single_shape, shape_type, fill, outline, xy = make_shape(im_size, shape_type, rand_size, rand_loc, rand_fill, rand_outline)
@@ -96,15 +96,15 @@ def make_shape_dataset(PATH, train_imgs, val_imgs, im_size, rand_size, rand_loc,
     train_imgs: 
     val_imgs:
     im_size: size of output img
-    rand_fill: Random Uniform (1, 255)
-    rand_outline: Random Uniform (1, 255)
+    rand_fill: Random Uniform (1, 128)
+    rand_outline: Random Uniform (1, 128)
     rand_size: Random shape size between 25% and 75% of the image
     rand_loc: Random Uniform over domain, excepting the edges
     """
     
     # paths to store iamges
     PATH = Path(PATH)
-    TRAIN_PATH = PATH / 'train' 
+    TRAIN_PATH = PATH / 'train'
     TRAIN_PATH.mkdir(parents=True, exist_ok=True)
     VAL_PATH = PATH / 'val'
     VAL_PATH.mkdir(parents=True, exist_ok=True)

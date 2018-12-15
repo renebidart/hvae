@@ -21,7 +21,9 @@ def make_hvae_loss(L1_KLD_weight=1, L2_KLD_weight=1):
         L2_KLD = loss_KLD_2d(l2_mu_logvar)
         BCE = F.mse_loss(recon_x, target, reduction='sum')
 
-        loss = Variable(BCE + L1_KLD_weight*L1_KLD + L2_KLD_weight*L2_KLD, requires_grad=True)
+#         loss = Variable(BCE + L1_KLD_weight*L1_KLD + L2_KLD_weight*L2_KLD, requires_grad=True)
+        loss = BCE + L1_KLD_weight*L1_KLD + L2_KLD_weight*L2_KLD
+
         return loss
     return hvae_loss
 
@@ -30,7 +32,7 @@ def loss_KLD_2d(mu_logvar):
     mu = mu_logvar[:, 0:int(mu_logvar.size()[1]/2)]
     logvar = mu_logvar[:, int(mu_logvar.size()[1]/2):]
     KLD = -0.5 * torch.sum(1 + 2 * logvar - mu.pow(2) - (2 * logvar).exp())
-    KLD = Variable(KLD, requires_grad=True) # seems need to do this to keep gradient
+#     KLD = Variable(KLD, requires_grad=True) # seems need to do this to keep gradient
     return KLD
 
 
@@ -43,7 +45,8 @@ def make_vae_loss(KLD_weight=1):
         KLD = -0.5 * torch.sum(1 + 2 * logvar - mu.pow(2) - (2 * logvar).exp())
         BCE = F.mse_loss(recon_x, target, reduction='sum')
 
-        loss = Variable(BCE + KLD_weight*KLD, requires_grad=True)
+#         loss = Variable(BCE + KLD_weight*KLD, requires_grad=True)
+        loss = BCE + KLD_weight*KLD
         return loss
     return vae_loss
 

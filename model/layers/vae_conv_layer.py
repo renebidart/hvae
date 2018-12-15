@@ -20,7 +20,7 @@ class ConvVAE2d(nn.Module):
          same: override padding and enforce same padding, boolean
     """
     
-    def __init__(self, vae_small, stride=1, padding=0, same=True, img_size=64):
+    def __init__(self, vae_small, stride=1, padding=0, same=True, img_size=256):
         super(ConvVAE2d, self).__init__()
         self.vae_small = vae_small
         self.vae_input_sz = self.vae_small.img_size
@@ -80,7 +80,7 @@ class ConvVAE2d(nn.Module):
         # reshape it back to correct way 
         x_encoded = torch.stack(x_encoded, 0)
 
-        x_encoded = x_encoded.contiguous().view(bs, int(self.cvae_small.latent_size*2), int(h/self.stride[0]), int(w/self.stride[1]))
+        x_encoded = x_encoded.contiguous().view(bs, int(self.vae_small.latent_size*2), int(h/self.stride[0]), int(w/self.stride[1]))
         return x_encoded
 
 
