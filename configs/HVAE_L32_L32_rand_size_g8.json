@@ -1,9 +1,9 @@
 {
-    "name": "NotHVAE_L32_L32_rand_size_loc_g8",
+    "name": "HVAE_L32_L32_rand_size_g8",
     "n_gpu": 1,
     
     "arch": {
-        "type": "NotHVAE",
+        "type": "HVAE",
         "args": {
                  "img_size": 256,
                   "in_channels": 1,
@@ -15,8 +15,8 @@
     "data_loader": {
         "type": "make_gen_grid",
         "args":{
-            "files_dict_loc": "/media/rene/data/hvae/shapes/sz32_rand_size_loc_g8/files_dict.pkl",
-            "batch_size": 200,
+            "files_dict_loc": "/media/rene/data/hvae/shapes/sz32_rand_size_g8/files_dict.pkl",
+            "batch_size": 256,
             "num_workers": 4,
             "img_size": 256
         }  
@@ -30,13 +30,14 @@
     },
 
     "loss": {
-        "type": "make_vae_loss",
+        "type": "make_hvae_enc_dec_loss",
         "args":{
-            "KLD_weight": 1
+            "L1_KLD_weight": 1,
+            "L2_KLD_weight": 1
         }
     },
     "metrics": [
-        "BCE", "KLD"
+        "BCE_L2", "KLD_1d_L1", "KLD_enc_2d_L2", "KLD_dec_2d_L2" 
     ],
     "lr_scheduler": {
         "type": "StepLR",

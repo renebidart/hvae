@@ -1,22 +1,23 @@
 {
-    "name": "NotHVAE_L32_L32_rand_size_loc_g8",
+    "name": "HVAE_pre_L64_L32_rand_size_loc_g8_struc2",
     "n_gpu": 1,
     
     "arch": {
-        "type": "NotHVAE",
+        "type": "HVAE",
         "args": {
+                 "small_vae_loc": "/media/rene/data/hvae/shapes_output/vae_abs_001_rand_size_loc/1215_182441/model_best.pth",
                  "img_size": 256,
                   "in_channels": 1,
                   "l2_latent_size": 32, 
-                  "l1_latent_size": 32, 
+                  "l1_latent_size": 64, 
                   "l2_stride": 32
         }
     },
     "data_loader": {
         "type": "make_gen_grid",
         "args":{
-            "files_dict_loc": "/media/rene/data/hvae/shapes/sz32_rand_size_loc_g8/files_dict.pkl",
-            "batch_size": 200,
+            "files_dict_loc": "/media/rene/data/hvae/shapes/sz32_rand_size_loc_g8_struc2/files_dict.pkl",
+            "batch_size": 256,
             "num_workers": 4,
             "img_size": 256
         }  
@@ -30,13 +31,14 @@
     },
 
     "loss": {
-        "type": "make_vae_loss",
+        "type": "make_hvae_enc_dec_loss",
         "args":{
-            "KLD_weight": 1
+            "L1_KLD_weight": 1,
+            "L2_KLD_weight": 1
         }
     },
     "metrics": [
-        "BCE", "KLD"
+        "BCE_L2", "KLD_1d_L1", "KLD_enc_2d_L2", "KLD_dec_2d_L2" 
     ],
     "lr_scheduler": {
         "type": "StepLR",
@@ -46,7 +48,7 @@
         }
     },
     "trainer": {
-        "epochs": 100,
+        "epochs": 120,
         "save_dir": "/media/rene/data/hvae/shapes_output",
         "save_period": 1,
         "verbosity": 1,

@@ -16,6 +16,7 @@ parser.add_argument('--rand_loc', dest='rand_loc', action='store_true')
 parser.add_argument('--rand_fill', dest='rand_fill', action='store_true')
 parser.add_argument('--rand_outline', dest='rand_outline', action='store_true')
 parser.add_argument('--grid_width', type=int, default=1)
+parser.add_argument('--structured_grid', action='store_true')
 args = parser.parse_args()
 
 
@@ -47,10 +48,13 @@ def make_shape(im_size, shape_type, rand_size, rand_loc, rand_fill, rand_outline
         
     if rand_size:
         height = randint(im_size/8, im_size*3/8)*2
-        if shape_type in [0, 1, 4]:
-            width=height
-        elif shape_type in [2, 3]:
-            width=height/2
+    else:
+        height = 16
+        
+    if shape_type in [0, 1, 4]:
+        width=height
+    elif shape_type in [2, 3]:
+        width=height/2
     
     if rand_loc:
         top_l = (randint(1, int(im_size-width-2)), (randint(1, int(im_size-height-2))))
@@ -78,17 +82,29 @@ def make_shape(im_size, shape_type, rand_size, rand_loc, rand_fill, rand_outline
     return im, shape_type, kwargs['fill'], kwargs['outline'], kwargs['xy']
     
 
-def make_shape_grid(im_size, rand_size, rand_loc, rand_fill, rand_outline, grid_width):
+def make_shape_grid(im_size, rand_size, rand_loc, rand_fill, rand_outline, grid_width, structured_grid):
     """Generate a grid of random shapes"""
     im = np.full((grid_width*im_size, grid_width*im_size), 255)
     for i in range(grid_width*grid_width):
-        shape_type = randint(0, 4)
-        single_shape, shape_type, fill, outline, xy = make_shape(im_size, shape_type, rand_size, rand_loc, rand_fill, rand_outline)
+        if structured_grid:
+            shape_type = np.floor(i/2)%4
+            if (i< (grid_width*grid_width)/4):
+                single_shape, shape_type, fill, outline, xy = make_shape(im_size, shape_type, None, None, None, None)
+            elif (i> (grid_width*grid_width)/4 and (i< (grid_width*grid_width)/2)):
+                single_shape, shape_type, fill, outline, xy = make_shape(im_size, shape_type, rand_size, None, None, None)
+            elif (i> (grid_width*grid_width)/2 and (i< (grid_width*grid_width)*3/4)):
+                single_shape, shape_type, fill, outline, xy = make_shape(im_size, shape_type, None, rand_loc, None, None)
+            elif (i> (grid_width*grid_width)*3/4):
+                single_shape, shape_type, fill, outline, xy = make_shape(im_size, shape_type, rand_size, rand_loc, None, None)
+        else:
+            shape_type = randint(0, 4)
+            single_shape, shape_type, fill, outline, xy = make_shape(im_size, shape_type, rand_size, rand_loc, rand_fill, rand_outline)
         im[(i//grid_width)*im_size: (1+i//grid_width)*im_size , (i%grid_width)*im_size: (1+i%grid_width)*im_size] = single_shape
     return Image.fromarray(np.uint8(im))
 
+
     
-def make_shape_dataset(PATH, train_imgs, val_imgs, im_size, rand_size, rand_loc, rand_fill, rand_outline, grid_width):
+def make_shape_dataset(PATH, train_imgs, val_imgs, im_size, rand_size, rand_loc, rand_fill, rand_outline, grid_width, structured_grid):
     """Create a dataset of 5 shapes:  square, rectangle, circle, ellipse, right traingle
     
     Options:
@@ -116,7 +132,7 @@ def make_shape_dataset(PATH, train_imgs, val_imgs, im_size, rand_size, rand_loc,
     for i in range(train_imgs):
         loc = str(TRAIN_PATH) + '/train_'+str(i)+'.png'
         if grid_width>1: # make the grid of images
-            im = make_shape_grid(im_size, rand_size, rand_loc, rand_fill, rand_outline, grid_width)
+            im = make_shape_grid(im_size, rand_size, rand_loc, rand_fill, rand_outline, grid_width, structured_grid)
             files['train'] = files['train'].append({'path': loc}, ignore_index=True)
         else: # generate a single image and info
             shape_type = randint(0, 4)
@@ -129,7 +145,7 @@ def make_shape_dataset(PATH, train_imgs, val_imgs, im_size, rand_size, rand_loc,
     for i in range(train_imgs):
         loc = str(VAL_PATH) + '/val_'+str(i)+'.png'
         if grid_width>1: # make the grid of images
-            im = make_shape_grid(im_size, rand_size, rand_loc, rand_fill, rand_outline, grid_width)
+            im = make_shape_grid(im_size, rand_size, rand_loc, rand_fill, rand_outline, grid_width, structured_grid)
             files['val'] = files['val'].append({'path': loc}, ignore_index=True)
         else: # generate a single image and info
             shape_type = randint(0, 4)
@@ -154,4 +170,4 @@ def make_shape_dataset(PATH, train_imgs, val_imgs, im_size, rand_size, rand_loc,
 if __name__ == '__main__':
     make_shape_dataset(args.PATH, args.train_imgs, args.val_imgs, args.im_size, 
                        args.rand_size, args.rand_loc, args.rand_fill, args.rand_outline,
-                       args.grid_width)
+                       args.grid_width, args.structured_grid)
