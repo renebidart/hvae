@@ -1,0 +1,63 @@
+{
+    "name": "HVAE_pre_L64_L32_rand_size_loc_g8_struc2_final",
+    "n_gpu": 1,
+    
+    "arch": {
+        "type": "HVAE",
+        "args": {
+                 "small_vae_loc": "/media/rene/data/hvae/shapes_output/vae_abs_001_rand_size_loc/1215_182441/model_best.pth",
+                 "img_size": 256,
+                  "in_channels": 1,
+                  "l2_latent_size": 32, 
+                  "l1_latent_size": 128, 
+                  "l2_stride": 32
+        }
+    },
+    "data_loader": {
+        "type": "make_gen_grid",
+        "args":{
+            "files_dict_loc": "/media/rene/data/hvae/shapes/sz32_rand_size_loc_g8_struc2/files_dict.pkl",
+            "batch_size": 512,
+            "num_workers": 4,
+            "img_size": 256
+        }  
+    },
+    "optimizer": {
+        "type": "Adam",
+        "args":{
+            "lr": 0.01,
+            "weight_decay": 5e-4
+        }
+    },
+
+    "loss": {
+        "type": "make_hvae_enc_dec_loss",
+        "args":{
+            "L1_KLD_weight": 0.25,
+            "L2_KLD_weight": 0.05
+        }
+    },
+    "metrics": [
+        "BCE_L2", "KLD_1d_L1", "KLD_enc_2d_L2", "KLD_dec_2d_L2" 
+    ],
+    "lr_scheduler": {
+        "type": "StepLR",
+        "args": {
+            "step_size": 25,
+            "gamma": 0.2
+        }
+    },
+    "trainer": {
+        "epochs": 150,
+        "save_dir": "/media/rene/data/hvae/shapes_output",
+        "save_period": 1,
+        "verbosity": 1,
+        "give_model_label": false,
+        
+        "monitor": "min val_loss",
+        "early_stop": 80,
+        
+        "tensorboardX": true,
+        "log_dir": "/media/rene/data/hvae/shapes_output"
+    }
+}
